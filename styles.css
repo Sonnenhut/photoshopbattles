@@ -1,27 +1,21 @@
-#container {
-    /*display: flex;
-    flex-direction: row;
-    */
-    width: 100%;
-    height: 100%;
+html,body,#container{
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+}
+#container , #op, #photoshop{
     display: flex;
+    flex: 1;
+}
+
+#op, #photoshop {
     justify-content: center;
     align-items: center;
 }
 
-div > div {
-    display: inline-block;
-    width: 50%;
-    height: 100%;
-    min-height: 0;
-    min-width: 0;
-}
-
 img {
+    width:100%;
+    height:100%;
+    object-fit: contain;
     cursor: pointer;
-    max-height:100%;
-    max-width: 50%;
-}
-img:first-child {
-    margin-right: 5px;
 }
