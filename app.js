@@ -18,16 +18,35 @@ function jsonp(url) {
     return promise;
 }
 
-function parseCommentImageUrl(commentBody) {
-    const matches = commentBody.match(/(https:\/\/i.imgur[a-zA-Z0-9\.\/]*)/);
+async function parseCommentImageUrl(commentBody) {
+    const matches = commentBody.match(/(https?:\/\/i?.?imgur[a-zA-Z0-9\.\/]*)/);
     if(matches && matches[0]) {
         let res = matches[0];
         // turn .gifv (served as html) into .gif
         res = res.replace(".gifv",".gif");
         // can we turn the link into the image url somehow?!
-        //return match.replace("https://imgur.com", "https://i.imgur.com");
-        return res;
+        if(res.indexOf("i.imgur") > 0) {
+            return res;
+        } else {
+            // parse img src from imgur html page
+            return imgurImageUrl(res);
+        }
     }
+}
+
+function imgurImageUrl(pageUrl) {
+    // use some arbitrary proxy to avoid CORS (and having to setup a backend for this little test)
+    return fetch(`https://cors-anywhere.herokuapp.com/${pageUrl}`, {
+        method: "GET",
+        headers: { "Origin": "www.somewhereinthe.web" }
+    })
+        .then(resp => resp.text())
+        .then(text => {
+            const matches = text.match(/image_src" href="(https:\/\/i\.imgur[a-zA-Z0-9\/\.]*)"/);
+            if(matches && matches.length === 2) {
+                return matches[1];
+            }
+        })//.then(url => console.log(url));
 }
 
 function img(url) {
@@ -42,18 +61,14 @@ function replaceChildren(id, newChild) {
     elem.appendChild(newChild);
 }
 
-function nextPost(after) {
+async function nextPost(after) {
     let skipName = "";
-    let skip = () => {nextPost(skipName)};
+    let skip = () => { nextPost(skipName) };
 
-    let opImg;
+    let postImg;
     let photoshopImg;
     let render = () => {
-        //let container = document.getElementById('container');
-        //container.innerHTML = "";
-        //container.appendChild(opImg);
-        //container.appendChild(photoshopImg);
-        replaceChildren('op', opImg);
+        replaceChildren('post', postImg);
         replaceChildren('photoshop', photoshopImg);
     };
     jsonp(`https://www.reddit.com/r/photoshopbattles/hot.json?limit=1&after=${after}`)
@@ -61,40 +76,37 @@ function nextPost(after) {
             const post = reddit.data.children.filter(post => !post.data.stickied)[0].data;
             skipName = post.name;
 
-            opImg = img(post.url);
-            opImg.onclick = () => skip();
+            postImg = img(post.url);
+            postImg.title = "Click -> Next post";
+            postImg.onclick = () => skip();
 
             const commentUrl = `https://www.reddit.com${post.permalink}.json?show=all`;
             return jsonp(commentUrl);
         })
-        .then((reddit) => {
-            console.log(reddit);
+        .then(async (reddit) => {
             // second listing contains comments (first contains the post itself)
             // t1 = comment
             let comments = reddit[1].data.children.filter(entry => entry.kind === "t1").map(child => child.data);
             //const more = reddit[1].data.children.filter(entry => entry.kind === "more");
 
-            // filter posts and set the photoshop url
-            comments = comments.reduce((acc, comment) => {
-                const url = parseCommentImageUrl(comment.body);
-                if(url) {
-                    comment.photoshop = url;
-                    acc.push(comment);
-                }
-                return acc;
-            },[]);
-
-            let nextImage = () => {
+            let nextImage = async () => {
                 if(comments.length === 0) {
                     skip();
                 } else {
-                    console.log(comments[0]);
-                    photoshopImg = img(comments.shift().photoshop);
-                    photoshopImg.onclick = nextImage;
-                    render();
+                    let comment = comments.shift();
+                    const url = await parseCommentImageUrl(comment.body);
+                    if(url) {
+                        photoshopImg = img(url);
+                        photoshopImg.title = "Click -> Next photoshop";
+                        photoshopImg.onclick = nextImage;
+                        render();
+                    } else {
+                        // skip the url if it couldn't be parsed
+                        await nextImage()
+                    }
                 }
             };
-            nextImage();
+            await nextImage();
         });
 }
 nextPost();
