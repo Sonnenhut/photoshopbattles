@@ -66,26 +66,37 @@ async function nextPost(after) {
     let skip = () => { nextPost(skipName) };
 
     let postImg;
+    let postTitle;
     let photoshopImg;
     let render = () => {
         replaceChildren('post', postImg);
         replaceChildren('photoshop', photoshopImg);
+        replaceChildren('header', postTitle);
     };
     jsonp(`https://www.reddit.com/r/photoshopbattles/hot.json?limit=1&after=${after}`)
         .then((reddit) => {
+            console.log(reddit);
             const post = reddit.data.children.filter(post => !post.data.stickied)[0].data;
             skipName = post.name;
+            let permalink = `https://www.reddit.com${post.permalink}`;
 
             postImg = img(post.url);
             postImg.title = "Click -> Next post";
             postImg.onclick = () => skip();
 
-            const commentUrl = `https://www.reddit.com${post.permalink}.json?show=all`;
+            postTitle = document.createElement('a');
+            postTitle.title = post.title;
+            postTitle.href = permalink;
+            postTitle.target = "_blank";
+            //postTitle.onclick = () => document.location = permalink;
+            postTitle.innerText = post.title;
+
+            const commentUrl = `${permalink}.json?show=all`;
             return jsonp(commentUrl);
         })
         .then(async (reddit) => {
             // second listing contains comments (first contains the post itself)
-            // t1 = comment
+            // t1 kind is a comment
             let comments = reddit[1].data.children.filter(entry => entry.kind === "t1").map(child => child.data);
             //const more = reddit[1].data.children.filter(entry => entry.kind === "more");
 
@@ -101,7 +112,6 @@ async function nextPost(after) {
                         photoshopImg.onclick = nextImage;
                         render();
                     } else {
-                        // skip the url if it couldn't be parsed
                         await nextImage()
                     }
                 }
