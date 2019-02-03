@@ -17,6 +17,10 @@ body{
     line-height: 5em;
 }
 
+#footer {
+    grid-area: footer;
+}
+
 #header > a {
     font-size: 2em;
     text-decoration: none;
@@ -26,11 +30,12 @@ body{
     height: 100vh;
     width: 100vw;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: 5em 1fr;
+    grid-template-columns: 1em repeat(2, 1fr) 1em;
+    grid-template-rows: 5em 1fr 1em;
     grid-template-areas:
-            "header  header"
-            "post    photoshop"
+            "header header  header    header"
+            "...... post    photoshop ......"
+            "footer footer  footer    footer"
 }
 
 #post, #photoshop {
@@ -45,6 +50,7 @@ img {
     max-width: 100%;
     object-fit: contain;
     cursor: pointer;
+    border-radius: 1em;
 }
 
 img:hover {
