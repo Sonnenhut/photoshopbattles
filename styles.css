@@ -26,18 +26,6 @@ body{
     text-decoration: none;
 }
 
-#container {
-    height: 100vh;
-    width: 100vw;
-    display: grid;
-    grid-template-columns: 1em repeat(2, 1fr) 1em;
-    grid-template-rows: 5em 1fr 1em;
-    grid-template-areas:
-            "header header  header    header"
-            "...... post    photoshop ......"
-            "footer footer  footer    footer"
-}
-
 #post, #photoshop {
     display: flex;
     flex: 1;
@@ -55,4 +43,35 @@ img {
 
 img:hover {
     background-color: lightgrey;
+}
+
+#container {
+    height: 100vh;
+    width: 100vw;
+}
+
+@media screen and (min-device-width: 0px)
+                and (max-device-width: 420px) {
+    #container {
+        display: grid;
+        grid-template-columns: 1em repeat(2, 1fr) 1em;
+        grid-template-rows: 5em repeat(2, 1fr) 1em;
+        grid-template-areas:
+                "header header    header    header"
+                "...... post      post      ......"
+                "...... photoshop photoshop ......"
+                "footer footer    footer    footer"
+    }
+}
+
+@media screen and (min-device-width: 421px) {
+    #container {
+        display: grid;
+        grid-template-columns: 1em 1fr 1em 1fr 1em;
+        grid-template-rows: 5em 1fr 1em;
+        grid-template-areas:
+                "header header  header header    header"
+                "...... post    ...... photoshop ......"
+                "footer footer  footer footer    footer"
+    }
 }
